@@ -1,0 +1,22 @@
+[package]
+name = "icc"
+version = "0.1.0"
+authors = ["Emil H. Clausen (SEQUOIIA) <sequoiia@hummel.yt>"]
+edition = "2018"
+
+[[bin]]
+name = "icc"
+path = "src/bin/icc.rs"
+
+[[bin]]
+name = "icc-cd"
+path = "src/bin/icc-cd.rs"
+
+[dependencies]
+log = "0.4.6"
+pretty_env_logger = "0.3"
+pnet = "0.21.0"
+pnet_macros_support = "0.21.0"
+rand = "0.4"
+chrono = "0.4.6"
+time = "0.1"
