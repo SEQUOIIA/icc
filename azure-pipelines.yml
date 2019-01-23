@@ -24,9 +24,9 @@ steps:
   condition: ne( variables['Agent.OS'], 'Windows_NT')
 
 - powershell: |
-    Invoke-WebRequest -Uri https://win.rustup.rs/x86_64 -OutFile rustup.exe
-    ./rustup.exe -y --default-toolchain stable
-  displayName: 'Install Rust toolchain'
+    Invoke-WebRequest -UserAgent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36" -Uri https://win.rustup.rs/ -OutFile rustup-init.exe
+    ./rustup-init.exe -y --default-toolchain stable
+  displayName: 'Install Rust toolchain - Windows'
   condition: eq( variables['Agent.OS'], 'Windows_NT')  
 
 - script: |
@@ -38,5 +38,5 @@ steps:
 - powershell: |
     $Env:Path += "%UserProfile%/.cargo/bin"
     cargo build --release
-  displayName: 'Building project'
+  displayName: 'Building project - Windows'
   condition: eq( variables['Agent.OS'], 'Windows_NT')  
