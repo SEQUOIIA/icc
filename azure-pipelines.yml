@@ -29,14 +29,21 @@ steps:
   displayName: 'Install Rust toolchain - Windows'
   condition: eq( variables['Agent.OS'], 'Windows_NT')  
 
+- powershell: |
+    Invoke-WebRequest -Uri https://nmap.org/npcap/dist/npcap-sdk-1.01.zip -OutFile npcap-sdk.zip
+    Expand-Archive -Path npcap-sdk.zip -DestinationPath npcap-sdk
+  displayName: 'WINDOWS ONLY - Get npcap sdk'
+  condition: eq( variables['Agent.OS'], 'Windows_NT')
+
 - script: |
     export PATH=$PATH:$HOME/.cargo/bin
     cargo build --release
   displayName: 'Building project'
   condition: ne( variables['Agent.OS'], 'Windows_NT')
 
-- script: | 
-    set PATH=%PATH%;%USERPROFILE%/.cargo/bin
+- powershell: | 
+    $env:Path += ";$env:userprofile\.cargo\bin"
+    $env:lib = "$((Get-Location).Path)\npcap-sdk\Lib\x64"
     cargo build --release
   displayName: 'Building project - Windows'
   condition: eq( variables['Agent.OS'], 'Windows_NT')  
