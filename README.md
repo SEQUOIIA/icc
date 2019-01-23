@@ -1,5 +1,5 @@
 # ICC -  Internet connectivity checker
-Master - [![Build Status](https://travis-ci.com/SEQUOIIA/icc.svg?branch=master)](https://travis-ci.com/SEQUOIIA/icc)
+Master - [![Build Status](https://dev.azure.com/sequoiia/icc/_apis/build/status/SEQUOIIA.icc?branchName=master)](https://dev.azure.com/sequoiia/icc/_build/latest?definitionId=1?branchName=master)
 
 ICC pings external IP addresses, and if there is not multiple responses within a customizable time period, it will determine that as WAN being down, and save a timestamp of the current time. As soon as the pinger receive responses again, it will once again save a timestamp of the current time. These two timestamps will be saved together and noted down as "internet downtime". 
 
