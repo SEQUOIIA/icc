@@ -201,7 +201,7 @@ impl PingUtility {
         let timeout = self.timeout.clone();
 
         // While on Windows pnet only receives the pings it sends itself, that is not the case on Linux/OSX.
-        // Therefore this keep track of sequence numbers and identifiers that have been sent, so make sure that only pings that have
+        // Therefore this keeps track of sequence numbers and identifiers that have been sent, to make sure that only pings that have
         // been sent by icc, is monitored.
         let mut ping_track : HashMap<String, bool> = HashMap::new();
 
