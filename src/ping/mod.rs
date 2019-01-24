@@ -119,7 +119,7 @@ impl PingUtility {
                             _ => {}
                         };
 
-                        info!("{:?}", packet);
+                        debug!("{:?}", packet);
                         let start_time = timer.read().unwrap();
                         match thread_tx.send(PingResult::Response{addr: addr, rtt: Instant::now().duration_since(*start_time), sequence: seq, identifier: identifier}) {
                             Ok(_) => {},
@@ -237,6 +237,7 @@ impl PingUtility {
 
                                     let sum = format!("{};{};{}", addr.to_string(), sequence, identifier);
                                     if ping_track.contains_key(sum.as_str()) {
+                                        ping_track.remove(sum.as_str());
                                         match results_channel_sender.send(result) {
                                             Ok(_) => {
                                                 debug!("PingResult sent to results_channel_receiver")
