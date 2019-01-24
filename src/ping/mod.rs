@@ -5,6 +5,7 @@ use self::deps::*;
 pub enum PingResult {
     Timeout{addr: IpAddr},
     Response{addr: IpAddr, rtt: Duration, sequence: u16, identifier: u16},
+    Request{addr: IpAddr, sequence: u16, identifier: u16, sent_success: bool}
 }
 
 pub type PingUtilityResult = Result<(PingUtility, Receiver<PingResult>), String>;
@@ -199,11 +200,21 @@ impl PingUtility {
         let timer = self.timer.clone();
         let timeout = self.timeout.clone();
 
+        // While on Windows pnet only receives the pings it sends itself, that is not the case on Linux/OSX.
+        // Therefore this keep track of sequence numbers and identifiers that have been sent, so make sure that only pings that have
+        // been sent by icc, is monitored.
+        let mut ping_track : HashMap<String, bool> = HashMap::new();
+
         thread::spawn(move || {
             loop {
                 for (address, seen) in addresses.lock().unwrap().iter_mut() {
                     if address.is_ipv4() {
-                        Self::send_echo_request(&mut tx_sender.lock().unwrap(), *address);
+                        let res : PingResult = Self::send_echo_request(&mut tx_sender.lock().unwrap(), *address);
+
+                        if let PingResult::Request{addr, sequence, identifier, sent_success} = res {
+                            ping_track.insert(format!("{};{};{}", addr.to_string(), sequence, identifier).to_owned(), true);
+                        }
+
                     } else if address.is_ipv6() {
                         Self::send_echov6_request(&mut txv6_sender.lock().unwrap(), *address);
                     }
@@ -219,19 +230,23 @@ impl PingUtility {
                     match thread_rx.lock().unwrap().try_recv() {
                         Ok(result) => {
                             match result {
-                                PingResult::Response {addr: addr, rtt: _, sequence: _, identifier: _} => {
+                                PingResult::Response {addr: addr, rtt: _, sequence: sequence, identifier: identifier} => {
                                     if let Some(seen) = addresses.lock().unwrap().get_mut(&addr) {
                                         *seen = true;
                                     }
 
-                                    match results_channel_sender.send(result) {
-                                        Ok(_) => {
-                                            debug!("PingResult sent to results_channel_receiver")
-                                        },
-                                        Err(e) => {
-                                            error!("Error sending ping result on channel: {}", e)
+                                    let sum = format!("{};{};{}", addr.to_string(), sequence, identifier);
+                                    if ping_track.contains_key(sum.as_str()) {
+                                        match results_channel_sender.send(result) {
+                                            Ok(_) => {
+                                                debug!("PingResult sent to results_channel_receiver")
+                                            },
+                                            Err(e) => {
+                                                error!("Error sending ping result on channel: {}", e)
+                                            }
                                         }
                                     }
+
                                 },
                                 _ => {}
                             }
@@ -267,7 +282,7 @@ impl PingUtility {
         });
     }
 
-    pub fn send_echo_request(tx: &mut TransportSender, address: IpAddr) {
+    pub fn send_echo_request(tx: &mut TransportSender, address: IpAddr) -> PingResult {
         let mut buf : Vec<u8> = vec![0; 16];
 
         let mut echo_request_packet = echo_request::MutableEchoRequestPacket::new(&mut buf[..]).unwrap();
@@ -284,6 +299,12 @@ impl PingUtility {
         match tx.send_to(echo_request_packet, address) {
             Ok(n) => {
                 debug!("Using payload {} {} {}", &n, sequence_number, identifier_number);
+                PingResult::Request {
+                    addr: address.clone(),
+                    sequence: sequence_number,
+                    identifier: identifier_number,
+                    sent_success: true
+                }
             },
             Err(e) => panic!("failed to send packet: {}", e),
         }

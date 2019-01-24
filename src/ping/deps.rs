@@ -7,6 +7,7 @@ extern crate log;
 pub use std::sync::{Arc, Mutex, RwLock};
 pub use std::thread;
 pub use std::sync::mpsc::{channel, Sender, Receiver};
+pub use std::collections::HashMap;
 pub use pnet::transport::{TransportSender, TransportReceiver};
 pub use pnet::transport::TransportChannelType::Layer4;
 pub use pnet::transport::TransportProtocol::{Ipv4, Ipv6};

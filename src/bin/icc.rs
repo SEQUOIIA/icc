@@ -40,7 +40,8 @@ fn main() {
                         if !cd.is_started() {
                             cd.start(); // Start tracking of downtime
                         }
-                    }
+                    },
+                    _ => {}
                 }
             },
             Err(_) => panic!("Something went wrong during result loop")
