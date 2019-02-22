@@ -5,6 +5,10 @@ use std::time::{Duration as DurationStd, Instant};
 use std::clone::Clone;
 use chrono::prelude::{Local, DateTime, TimeZone};
 use time::Duration;
+use std::sync::{Arc, Mutex};
+use std::fs::File as fsFile;
+
+pub type File = Arc<Mutex<fsFile>>;
 
 #[derive(Clone, Copy)]
 pub struct ConnectivityDown {
@@ -57,6 +61,24 @@ impl ConnectivityDown {
         let start = Local.timestamp(self.start.unwrap(), 0);
         let end = Local.timestamp(self.end.unwrap(), 0);
         format!("{} - {}", start.to_rfc2822(), end.to_rfc2822())
+    }
+
+    pub fn start_text(&self) -> String {
+        let start = Local.timestamp(self.start.unwrap(), 0);
+        start.to_rfc2822()
+    }
+
+    pub fn start_epoch_timestamp(&self) -> i64 {
+        self.start.unwrap()
+    }
+
+    pub fn end_text(&self) -> String {
+        let end = Local.timestamp(self.end.unwrap(), 0);
+        end.to_rfc2822()
+    }
+
+    pub fn end_epoch_timestamp(&self) -> i64 {
+        self.end.unwrap()
     }
 
     pub fn duration_text(&self) -> String {

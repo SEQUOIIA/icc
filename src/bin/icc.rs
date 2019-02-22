@@ -3,11 +3,14 @@ extern crate log;
 extern crate icc;
 
 use std::env;
+use std::fs::{File, OpenOptions};
 use std::sync::mpsc::{Receiver};
+use std::sync::{Arc, Mutex};
 use log::{error, info};
 
 use icc::ping::{PingUtility, PingResult as PingUtilityResult};
 use icc::ping::model::{ConnectivityDown};
+use icc::util::log_cd;
 
 fn main() {
     setup();
@@ -18,6 +21,12 @@ fn main() {
     p_utility.add_ipaddress("1.1.1.1");
 
     p_utility.start_pinging();
+
+    let log_file = Arc::new(Mutex::new(OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open("icc-log").unwrap()));
 
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
     let mut cd : ConnectivityDown = ConnectivityDown::new();
@@ -49,6 +58,7 @@ fn main() {
 
         if cd.is_ready() {
             cd_col.push(cd);
+            log_cd(cd.clone(), log_file.clone());
             cd = ConnectivityDown::new();
         }
     }
