@@ -5,7 +5,7 @@ use std::io::Write;
 pub fn log_cd(mut cd : ConnectivityDown, log_file : File) {
     thread::spawn(move || {
         let mut file_lock = log_file.lock().unwrap();
-        let payload : String = format!("Downtime:\n ({}) {} - ({}) {}\n lasted for: {}",
+        let payload : String = format!("Downtime:\n ({}) {} - ({}) {}\n lasted for: {}\n",
             cd.start_epoch_timestamp(),
             cd.start_text(),
             cd.end_epoch_timestamp(),
