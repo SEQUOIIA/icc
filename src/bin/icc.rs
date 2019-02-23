@@ -30,6 +30,8 @@ fn main() {
 
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
     let mut cd : ConnectivityDown = ConnectivityDown::new();
+    let mut no_response_counter = 0;
+    let no_response_counter_limit = 3;
 
     loop {
         match results.recv() {
@@ -37,6 +39,8 @@ fn main() {
                 match res {
                     PingUtilityResult::Response{addr, rtt, sequence, identifier} => {
                         info!("Receive from Address {} in {:?}. seq = {}, identifier = {}", addr, rtt, sequence, identifier);
+
+                        no_response_counter = 0;
 
                         if cd.is_started() {
                             cd.end();
@@ -47,7 +51,11 @@ fn main() {
                         error!("Idle Address {}.", addr);
 
                         if !cd.is_started() {
-                            cd.start(); // Start tracking of downtime
+                            if no_response_counter >= no_response_counter_limit {
+                                cd.start(); // Start tracking of downtime
+                            } else {
+                                no_response_counter = no_response_counter + 1;
+                            }
                         }
                     },
                     _ => {}
