@@ -307,7 +307,20 @@ impl PingUtility {
                     sent_success: true
                 }
             },
-            Err(e) => panic!("failed to send packet: {}", e),
+            Err(e) => {
+                let mut ignore_err : bool = true;
+
+                // OSX
+                if cfg!(target_os = "macos") {
+                    if e.raw_os_error().unwrap() == 65 {
+                        ignore_err = false;
+                    }
+                }
+
+                if !ignore_err {
+                    panic!("failed to send packet: {}", e);
+                }
+            },
         }
     }
 

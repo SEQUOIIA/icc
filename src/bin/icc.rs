@@ -25,7 +25,7 @@ fn main() {
     let log_file = Arc::new(Mutex::new(OpenOptions::new()
         .read(true)
         .write(true)
-        .create(true)
+        .append(true)
         .open("icc-log").unwrap()));
 
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
