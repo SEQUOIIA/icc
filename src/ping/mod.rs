@@ -320,6 +320,8 @@ impl PingUtility {
                 if !ignore_err {
                     panic!("failed to send packet: {}", e);
                 }
+
+                PingResult::Timeout { addr: address.clone() }
             },
         }
     }
