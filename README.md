@@ -1,5 +1,4 @@
 # ICC -  Internet connectivity checker
-Master - [![Build Status](https://dev.azure.com/sequoiia/icc/_apis/build/status/SEQUOIIA.icc?branchName=master)](https://dev.azure.com/sequoiia/icc/_build/latest?definitionId=1?branchName=master)
 
 | Status    | Master | Develop |
 |-----------|--------|---------|
