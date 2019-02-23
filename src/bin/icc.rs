@@ -26,6 +26,7 @@ fn main() {
         .read(true)
         .write(true)
         .create(true)
+        .append(true)
         .open("icc-log").unwrap()));
 
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
@@ -47,14 +48,18 @@ fn main() {
                                 cd = ConnectivityDown::new();
                             }
                         }
-                        no_response_counter = 0;
-                        debug!("no_response_counter reset to 0");
+                        if no_response_counter != 0 {
+                            no_response_counter = 0;
+                            debug!("no_response_counter reset to 0");
+                        }
                     },
 
                     PingUtilityResult::Timeout {addr} => {
                         error!("Idle Address {}.", addr);
-                        no_response_counter = no_response_counter + 1;
-                        debug!("no_response_counter increased with 1, currently at {}", no_response_counter);
+                        if no_response_counter < no_response_counter_limit {
+                            no_response_counter = no_response_counter + 1;
+                            debug!("no_response_counter increased with 1, currently at {}", no_response_counter);
+                        }
                         if !cd.is_started() {
                             cd.start(); // Start tracking of downtime
                         }
