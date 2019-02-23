@@ -6,7 +6,7 @@ use std::env;
 use std::fs::{File, OpenOptions};
 use std::sync::mpsc::{Receiver};
 use std::sync::{Arc, Mutex};
-use log::{error, info};
+use log::{error, info, debug};
 
 use icc::ping::{PingUtility, PingResult as PingUtilityResult};
 use icc::ping::model::{ConnectivityDown};
@@ -40,22 +40,23 @@ fn main() {
                     PingUtilityResult::Response{addr, rtt, sequence, identifier} => {
                         info!("Receive from Address {} in {:?}. seq = {}, identifier = {}", addr, rtt, sequence, identifier);
 
-                        no_response_counter = 0;
-
                         if cd.is_started() {
-                            cd.end();
+                            if no_response_counter >= no_response_counter_limit {
+                                cd.end();
+                            } else {
+                                cd = ConnectivityDown::new();
+                            }
                         }
+                        no_response_counter = 0;
+                        debug!("no_response_counter reset to 0");
                     },
 
                     PingUtilityResult::Timeout {addr} => {
                         error!("Idle Address {}.", addr);
-
+                        no_response_counter = no_response_counter + 1;
+                        debug!("no_response_counter increased with 1, currently at {}", no_response_counter);
                         if !cd.is_started() {
-                            if no_response_counter >= no_response_counter_limit {
-                                cd.start(); // Start tracking of downtime
-                            } else {
-                                no_response_counter = no_response_counter + 1;
-                            }
+                            cd.start(); // Start tracking of downtime
                         }
                     },
                     _ => {}
