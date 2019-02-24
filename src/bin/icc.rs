@@ -11,6 +11,7 @@ use log::{error, info, debug};
 use icc::ping::{PingUtility, PingResult as PingUtilityResult};
 use icc::ping::model::{ConnectivityDown};
 use icc::util::log_cd;
+use icc::util::db::Db;
 
 fn main() {
     setup();
@@ -21,6 +22,8 @@ fn main() {
     p_utility.add_ipaddress("1.1.1.1");
 
     p_utility.start_pinging();
+
+    let db_client = Db::new();
 
     let log_file = Arc::new(Mutex::new(OpenOptions::new()
         .read(true)
