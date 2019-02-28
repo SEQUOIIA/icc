@@ -13,6 +13,8 @@ pub struct Config {
     pub addresses_to_monitor: Option<Vec<String>>,
     // Maximum ping timeouts before it counts as "downtime"
     pub max_timeouts: Option<u32>,
+    // Max time waiting for a singular ping, before deeming it a timeout.
+    pub max_ping_timeout: Option<u64>,
     // Local database file
     pub db: Option<String>,
     // If set, logs downtimes in clear text at the specified path
@@ -42,6 +44,10 @@ pub fn config() -> Config {
 
     if let None = config.max_timeouts {
         config.max_timeouts = Some(3);
+    }
+
+    if let None = config.max_ping_timeout {
+        config.max_ping_timeout = Some(1000);
     }
 
     if let None = config.db {

@@ -19,7 +19,7 @@ fn main() {
 
     setup();
 
-    let (p_utility, results) = PingUtility::new(None).unwrap();
+    let (p_utility, results) = PingUtility::new(Some(config.max_ping_timeout.as_ref().unwrap().clone())).unwrap();
 
     for ip in config.addresses_to_monitor.as_ref().unwrap() {
         p_utility.add_ipaddress(ip);
@@ -45,7 +45,7 @@ fn main() {
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
     let mut cd : ConnectivityDown = ConnectivityDown::new();
     let mut no_response_counter = 0;
-    let no_response_counter_limit = 3;
+    let no_response_counter_limit = config.max_timeouts.as_ref().unwrap().clone();
 
     loop {
         match results.recv() {
