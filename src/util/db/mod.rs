@@ -7,9 +7,9 @@ pub struct Db {
 }
 
 impl Db {
-    pub fn new() -> Self {
+    pub fn new(filename : &str) -> Self {
         //let conn = Connection::open("data").unwrap();
-        let conn = Connection::open_with_flags("data", OpenFlags::SQLITE_OPEN_READ_WRITE
+        let conn = Connection::open_with_flags(filename, OpenFlags::SQLITE_OPEN_READ_WRITE
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_SHARED_CACHE
             | OpenFlags::SQLITE_OPEN_NO_MUTEX

@@ -1,14 +1,21 @@
 extern crate pretty_env_logger;
 extern crate log;
+extern crate actix;
 extern crate actix_web;
+extern crate askama;
+extern crate icc;
 
 use actix_web::http::{header, Method, StatusCode, HttpTryFrom};
 use actix_web::middleware::{Middleware, Finished, Response, Started};
 use actix_web::middleware::session::{self, RequestSession};
-use actix_web::{error, fs, middleware, pred, server, App, Error, HttpRequest, HttpResponse, Path, Result, ws, actix::Actor, actix::StreamHandler};
+use actix_web::{error, fs, middleware, pred, server, App, Error, HttpRequest, HttpResponse, Path, Result, ws};
+use actix::prelude::*;
+use askama::Template;
+use serde::{Serialize, Deserialize};
 use log::{error, info, debug};
 use std::env;
 use std::sync::{Arc, RwLock};
+use icc::util::config::{config, Config};
 
 struct GlobalData {
     pub is_down : bool
@@ -41,7 +48,15 @@ impl<S> Middleware<S> for SetDefaultHeaders {
 }
 
 // Websocket stream
+#[derive(Message)]
+pub struct Message(pub String);
+
 struct Ws;
+
+#[derive(Message)]
+struct Connect {
+    pub addr: Recipient<Message>
+}
 
 impl Actor for Ws {
     type Context = ws::WebsocketContext<Self, Arc<RwLock<GlobalData>>>;
@@ -59,7 +74,32 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for Ws {
     }
 }
 
+impl Handler<Connect> for Ws {
+    type Result = ();
+
+    fn handle(&mut self, msg: Connect, ctx: &mut Self::Context) {
+        debug!("Connect message being handled");
+        self.init(msg.addr);
+    }
+}
+
+impl Ws {
+    fn init(&self, addr : Recipient<Message>) {
+        addr.do_send(Message("test".to_owned()));
+    }
+}
+
+// Index template
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexTemplate<'a> {
+    is_down: &'a str
+}
+
 fn main() {
+    let config : Config = config();
+
     setup();
 
     let data = GlobalData::new();
@@ -100,21 +140,25 @@ fn main() {
                         state.write().unwrap().is_down = true;
                     }
 
+                    let payload = IndexTemplate {is_down: format!("{}", is_down).as_str()}.render().unwrap();
+
 
                     HttpResponse::Ok()
                         .content_type("text/html; charset=utf-8")
                         .header("server", "icc")
-                        .body(format!("{}", is_down))
+                        .body(payload)
                 })
             })
     };
 
     server::new(app)
-        .bind("0.0.0.0:4017")
+        .bind(config.bind_address.expect("Bind address is not specified"))
         .unwrap()
         .shutdown_timeout(0)
         .run();
 }
+
+
 
 #[cfg(debug_assertions)]
 fn setup() {

@@ -8,7 +8,7 @@ use time::Duration;
 use std::sync::{Arc, Mutex};
 use std::fs::File as fsFile;
 
-pub type File = Arc<Mutex<fsFile>>;
+pub type File = Arc<Mutex<Option<fsFile>>>;
 
 #[derive(Clone, Copy)]
 pub struct ConnectivityDown {

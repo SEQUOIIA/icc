@@ -12,25 +12,35 @@ use icc::ping::{PingUtility, PingResult as PingUtilityResult};
 use icc::ping::model::{ConnectivityDown};
 use icc::util::log_cd;
 use icc::util::db::Db;
+use icc::util::config::{config, Config};
 
 fn main() {
+    let config : Config = config();
+
     setup();
 
     let (p_utility, results) = PingUtility::new(None).unwrap();
 
-    p_utility.add_ipaddress("8.8.8.8");
-    p_utility.add_ipaddress("1.1.1.1");
+    for ip in config.addresses_to_monitor.as_ref().unwrap() {
+        p_utility.add_ipaddress(ip);
+    }
 
     p_utility.start_pinging();
 
-    let db_client = Db::new();
-
-    let log_file = Arc::new(Mutex::new(OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .append(true)
-        .open("icc-log").unwrap()));
+    let db_client = Db::new(config.db.as_ref().unwrap());
+    let mut log_file : Arc<Mutex<Option<File>>>;
+    let mut use_clear_text_log : bool = false;
+    if let Some(filename) = config.clear_text_log {
+        use_clear_text_log = true;
+        log_file = Arc::new(Mutex::new(Some(OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .append(true)
+            .open(filename).unwrap())));
+    } else {
+        log_file = Arc::new(Mutex::new(None))
+    }
 
     let mut cd_col : Vec<ConnectivityDown> = Vec::new();
     let mut cd : ConnectivityDown = ConnectivityDown::new();
@@ -75,7 +85,9 @@ fn main() {
 
         if cd.is_ready() {
             cd_col.push(cd);
-            log_cd(cd.clone(), log_file.clone());
+            if use_clear_text_log {
+                log_cd(cd.clone(), log_file.clone(), config.db.as_ref().unwrap().to_owned());
+            }
             cd = ConnectivityDown::new();
         }
     }
