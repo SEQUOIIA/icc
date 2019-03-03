@@ -1,6 +1,7 @@
 extern crate pretty_env_logger;
 extern crate log;
 extern crate icc;
+extern crate ctrlc;
 
 use std::env;
 use std::fs::{File, OpenOptions};
@@ -14,10 +15,19 @@ use icc::util::log_cd;
 use icc::util::db::Db;
 use icc::util::config::{config, Config};
 
+fn handle_exit() {
+    ctrlc::set_handler(move || {
+        info!("SIGINT signal caught");
+
+    }).expect("Unable to set SIGINT handler");
+}
+
 fn main() {
     let config : Config = config();
 
     setup();
+
+    handle_exit();
 
     let (p_utility, results) = PingUtility::new(Some(config.max_ping_timeout.as_ref().unwrap().clone())).unwrap();
 

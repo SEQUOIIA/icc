@@ -2,8 +2,10 @@ extern crate pretty_env_logger;
 extern crate log;
 extern crate actix;
 extern crate actix_web;
+extern crate actix_net;
 extern crate askama;
 extern crate icc;
+extern crate ctrlc;
 
 use actix_web::http::{header, Method, StatusCode, HttpTryFrom};
 use actix_web::middleware::{Middleware, Finished, Response, Started};
@@ -99,6 +101,7 @@ struct IndexTemplate<'a> {
 
 fn main() {
     let config : Config = config();
+    let sys = actix::System::new("icc-web");
 
     setup();
 
@@ -151,13 +154,51 @@ fn main() {
             })
     };
 
-    server::new(app)
+
+    let server = server::new(app)
         .bind(config.bind_address.expect("Bind address is not specified"))
         .unwrap()
-        .shutdown_timeout(0)
-        .run();
+        .shutdown_timeout(5)
+        .disable_signals();
+    let server_addr = server.start();
+
+    let handleicc = HandleIcc {http_server: server_addr}.start();
+    handle_exit(handleicc);
+
+    sys.run();
 }
 
+struct HandleIcc {
+    http_server : Addr<actix_net::server::Server>
+}
+
+impl actix::Actor for HandleIcc{
+    type Context = Context<Self>;
+}
+
+struct IccShutdown;
+
+impl actix::Message for IccShutdown {
+    type Result = usize;
+}
+
+impl Handler<IccShutdown> for HandleIcc {
+    type Result = usize;
+
+    fn handle(&mut self, msg: IccShutdown, ctx: &mut Context<Self>) -> usize{
+        self.http_server.do_send(actix_web::server::StopServer {graceful: true});
+        info!("Stopping ICC services");
+        0
+    }
+}
+
+fn handle_exit(addr : Addr<HandleIcc>) {
+    ctrlc::set_handler(move || {
+        addr.do_send(IccShutdown {});
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::process::exit(1);
+    }).expect("Unable to set SIGINT handler");
+}
 
 
 #[cfg(debug_assertions)]
