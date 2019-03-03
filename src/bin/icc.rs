@@ -6,7 +6,7 @@ extern crate ctrlc;
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::sync::mpsc::{Receiver};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}};
 use log::{error, info, debug};
 
 use icc::ping::{PingUtility, PingResult as PingUtilityResult};
@@ -15,10 +15,10 @@ use icc::util::log_cd;
 use icc::util::db::Db;
 use icc::util::config::{config, Config};
 
-fn handle_exit() {
+fn handle_exit(mut stop_sig : Arc<AtomicBool>) {
     ctrlc::set_handler(move || {
-        info!("SIGINT signal caught");
-
+        info!("Stopping ICC");
+        stop_sig.swap(true, Ordering::Relaxed);
     }).expect("Unable to set SIGINT handler");
 }
 
@@ -27,7 +27,8 @@ fn main() {
 
     setup();
 
-    handle_exit();
+    let stop_bool = Arc::new(AtomicBool::new(false));
+    handle_exit(stop_bool.clone());
 
     let (p_utility, results) = PingUtility::new(Some(config.max_ping_timeout.as_ref().unwrap().clone())).unwrap();
 
@@ -96,10 +97,19 @@ fn main() {
         if cd.is_ready() {
             cd_col.push(cd);
             if use_clear_text_log {
+                icc::util::THREADS_ACTIVE_GRACEFUL.fetch_add(1, Ordering::SeqCst);
                 log_cd(cd.clone(), log_file.clone(), config.db.as_ref().unwrap().to_owned());
             }
             cd = ConnectivityDown::new();
         }
+
+        if stop_bool.load(Ordering::Relaxed) {
+            break;
+        }
+    }
+
+    while icc::util::THREADS_ACTIVE_GRACEFUL.load(Ordering::SeqCst) != 0 {
+        std::thread::sleep(std::time::Duration::from_millis(50));
     }
 }
 

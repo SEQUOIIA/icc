@@ -1,9 +1,14 @@
 use super::ping::model::{ConnectivityDown, File};
 use std::thread;
 use std::io::Write;
+use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+
 
 pub mod db;
 pub mod config;
+
+pub static THREADS_ACTIVE_GRACEFUL : AtomicUsize = ATOMIC_USIZE_INIT;
+
 
 pub fn log_cd(mut cd : ConnectivityDown, log_file : File, db_filename : String) {
     thread::spawn(move || {
@@ -19,5 +24,6 @@ pub fn log_cd(mut cd : ConnectivityDown, log_file : File, db_filename : String) 
 
         let dbc = db::Db::new(db_filename.as_str());
         dbc.insert_current_downtime(cd.start_epoch_timestamp(), cd.end_epoch_timestamp());
+        THREADS_ACTIVE_GRACEFUL.fetch_sub(1, Ordering::SeqCst);
     });
 }
