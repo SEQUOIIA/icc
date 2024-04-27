@@ -1,12 +1,13 @@
 extern crate chrono;
-extern crate time;
 
 use std::time::{Duration as DurationStd, Instant};
 use std::clone::Clone;
 use chrono::prelude::{Local, DateTime, TimeZone};
-use time::Duration;
+// use std::time::Duration;
+// use time::Duration;
 use std::sync::{Arc, Mutex};
 use std::fs::File as fsFile;
+use chrono::TimeDelta;
 
 pub type File = Arc<Mutex<Option<fsFile>>>;
 
@@ -51,9 +52,9 @@ impl ConnectivityDown {
         }
     }
 
-    pub fn duration(&self) -> Duration {
-        let start = Local.timestamp(self.start.unwrap(), 0);
-        let end = Local.timestamp(self.end.unwrap(), 0);
+    pub fn duration(&self) -> TimeDelta {
+        let start = Local.timestamp_opt(self.start.unwrap(), 0).unwrap();
+        let end = Local.timestamp_opt(self.end.unwrap(), 0).unwrap();
         end.signed_duration_since(start)
     }
 
@@ -90,7 +91,7 @@ impl ConnectivityDown {
     }
 }
 
-impl DurationFormat for Duration {
+impl DurationFormat for TimeDelta {
     fn as_text(&self) -> String {
         let hours = self.num_hours();
         let minutes = self.num_minutes() - (self.num_hours() * 60);

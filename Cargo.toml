@@ -2,34 +2,24 @@
 name = "icc"
 version = "0.1.0"
 authors = ["Emil H. Clausen (SEQUOIIA) <sequoiia@hummel.yt>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "icc"
 path = "src/bin/icc.rs"
 
-[[bin]]
-name = "icc-cd"
-path = "src/bin/icc-cd.rs"
-
 [dependencies]
-actix = "0.7"
-actix-web = "0.7"
-actix-net = "0.2.6"
+#seqtf_bootstrap = {registry = "seqtf", version = "0.1.4"}
 log = "0.4.6"
 pretty_env_logger = "0.3"
-pnet = "0.22.0"
-pnet_macros_support = "0.22.0"
+pnet = "0.34.0"
+pnet_macros_support = "0.34.0"
 rand = "0.6.5"
 chrono = "0.4.6"
-time = "0.1"
 toml = "0.4"
 serde_derive = "1.0"
 serde = "1.0"
-ctrlc = {version = "3.1.1", features = ["termination"]}
+ctrlc = {version = "3.2.5", features = ["termination"]}
 [dependencies.rusqlite]
 version = "0.16.0"
 features = ["bundled"]
-[dependencies.askama]
-version = "0.8"
-features = ["with-actix-web"]
