@@ -1,8 +1,8 @@
 use std::fs::{File, OpenOptions};
 use std::io::Read;
 use std::io::Write;
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
+use rand::{rng, thread_rng, Rng};
+use rand::distr::{Alphanumeric, SampleString};
 
 // Config
 #[derive(Deserialize, Serialize)]
@@ -51,10 +51,7 @@ pub fn config() -> Config {
     }
 
     if let None = config.db {
-        let rand_filename : String = thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(17)
-            .collect();
+        let rand_filename : String = Alphanumeric.sample_string(&mut rand::rng(), 17);
         config.db = Some(rand_filename);
         save_to_file = true;
     }

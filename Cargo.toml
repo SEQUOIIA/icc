@@ -10,16 +10,16 @@ path = "src/bin/icc.rs"
 
 [dependencies]
 #seqtf_bootstrap = {registry = "seqtf", version = "0.1.4"}
-log = "0.4.6"
-pretty_env_logger = "0.3"
-pnet = "0.34.0"
-pnet_macros_support = "0.34.0"
-rand = "0.6.5"
-chrono = "0.4.6"
-toml = "0.4"
+log = "0.4.28"
+pretty_env_logger = "0.5"
+pnet = "0.35.0"
+pnet_macros_support = "0.35.0"
+rand = "0.9.2"
+chrono = "0.4.42"
+toml = "0.9"
 serde_derive = "1.0"
-serde = "1.0"
-ctrlc = {version = "3.2.5", features = ["termination"]}
+serde = "^1"
+ctrlc = {version = "3.5.1", features = ["termination"]}
 [dependencies.rusqlite]
-version = "0.16.0"
+version = "0.37.0"
 features = ["bundled"]

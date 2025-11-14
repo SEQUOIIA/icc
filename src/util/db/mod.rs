@@ -1,6 +1,6 @@
 extern crate rusqlite;
 
-use rusqlite::{Connection, Result, NO_PARAMS, Statement, OpenFlags};
+use rusqlite::{Connection, Result, Statement, OpenFlags};
 
 pub struct Db {
     pub conn : Connection
@@ -20,7 +20,7 @@ impl Db {
                             start integer,\
                             end integer\
                        )",
-                     NO_PARAMS).unwrap();
+                     []).unwrap();
 
         Self {conn: conn}
     }
