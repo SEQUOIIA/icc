@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  db:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=p
+      - POSTGRES_DB=mirage
+    healthcheck:
+      test: "pg_isready -h localhost -p 5432 -U postgres"
+      interval: 2s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+volumes:
+  db-data:
+networks:
+  mirage-development:
+    name: mirage-development
+
